@@ -11,7 +11,7 @@
     <img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube Badge"/>
   </a>
   <a href="https://youtube.com/@mr.dexlua?si=Hfh-XW4GvC4Kvzp6">
-    <img src="https://img.shields.io/youtube/channel/subscribers/UC_x5XG1OV2P6uZZ5FSM9Ttw?style=social&logo=youtube" alt="YouTube Subscribers"/>
+    <img src="https://img.shields.io/badge/Subscribers-10?style=social&logo=youtube" alt="YouTube Subscribers"/>
   </a>
 </p>
 
@@ -25,7 +25,7 @@
 ## 👨‍💻 About Me
 
 Xin chào! Tôi là **Mr.DexLua**, một **Lua Script Developer**.  
-🎥 Đồng thời tôi là một **YouTube Content Creator**, chuyên chia sẻ các **script tự động hóa** và công cụ sáng tạo.
+🎥 Đồng thời tôi là một **YouTube Content Creator**, chuyên chia sẻ các **script tự động hóa** và công cụ dell sáng tạo.
 
 ---
 
