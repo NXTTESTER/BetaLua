@@ -1,0 +1,195 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Camera = workspace.CurrentCamera
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "Dex"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = PlayerGui
+
+local function createToggle(name, posY, colorOff, colorOn, iconOff, iconOn)
+    local container = {}
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 100, 0, 40)
+    frame.Position = UDim2.new(0, 30, 0, posY)
+    frame.BackgroundColor3 = colorOff
+    frame.BorderSizePixel = 0
+    frame.Parent = screenGui
+    local cr = Instance.new("UICorner", frame)
+    cr.CornerRadius = UDim.new(0, 20)
+
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 36, 0, 36)
+    knob.Position = UDim2.new(0, 2, 0, 2)
+    knob.BackgroundColor3 = Color3.new(1,1,1)
+    knob.BorderSizePixel = 0
+    knob.Parent = frame
+    local kr = Instance.new("UICorner", knob)
+    kr.CornerRadius = UDim.new(1,0)
+
+    local icon = Instance.new("TextLabel")
+    icon.Size = UDim2.new(1, 0, 1, 0)
+    icon.BackgroundTransparency = 1
+    icon.Text = iconOff
+    icon.TextScaled = true
+    icon.Font = Enum.Font.SourceSansBold
+    icon.TextColor3 = Color3.new(0,0,0)
+    icon.Parent = knob
+
+    local enabled = false
+
+    local function toggle()
+        enabled = not enabled
+        TweenService:Create(frame, TweenInfo.new(0.25), {
+            BackgroundColor3 = enabled and colorOn or colorOff
+        }):Play()
+        TweenService:Create(knob, TweenInfo.new(0.25), {
+            Position = enabled and UDim2.new(1, -48, 0, 2) or UDim2.new(0, 2, 0, 2)
+        }):Play()
+        TweenService:Create(icon, TweenInfo.new(0.1), { TextTransparency = 1 }):Play()
+        task.delay(0.1, function()
+            icon.Text = enabled and iconOn or iconOff
+            TweenService:Create(icon, TweenInfo.new(0.1), { TextTransparency = 0 }):Play()
+        end)
+        if container.onToggle then
+            container.onToggle(enabled)
+        end
+    end
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            toggle()
+        end
+    end)
+
+    container.getState = function() return enabled end
+    container.onToggle = nil
+    container.frame = frame
+    return container
+end
+
+local espToggle = createToggle("ESPToggle", 20, Color3.fromRGB(50,50,50), Color3.fromRGB(150,200,255), "🌬", "🫡")
+local aimToggle = createToggle("AimToggle", 80, Color3.fromRGB(50,50,50), Color3.fromRGB(255,224,102), "🌬", "🫡")
+
+local espEntries = {}
+local addConn, remConn
+
+local function isZombie(z)
+    local n = tonumber(z.Name)
+    return n and n >= 1 and n <= 999
+end
+
+local function createESP(zombie)
+    if espEntries[zombie] then return end
+    local head = zombie:FindFirstChild("Head")
+    if not head then return end
+
+    local gui = Instance.new("BillboardGui")
+    gui.Adornee = head
+    gui.Size = UDim2.new(0, 100, 0, 25)
+    gui.StudsOffset = Vector3.new(0, 1.5, 0)
+    gui.AlwaysOnTop = true
+    gui.Parent = head
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = "Zombie#" .. zombie.Name
+    label.TextSize = 14
+    label.Font = Enum.Font.SourceSansBold
+    label.TextColor3 = Color3.fromRGB(255, 100, 100)
+    label.Parent = gui
+
+    espEntries[zombie] = gui
+end
+
+local function destroyESP(zombie)
+    if espEntries[zombie] then
+        espEntries[zombie]:Destroy()
+        espEntries[zombie] = nil
+    end
+end
+
+local function enableESP()
+    for _, z in ipairs(workspace:WaitForChild("Zombies"):GetChildren()) do
+        if isZombie(z) then
+            createESP(z)
+        end
+    end
+    addConn = workspace.Zombies.ChildAdded:Connect(function(z)
+        if isZombie(z) then
+            z:WaitForChild("Head", 3)
+            createESP(z)
+        end
+    end)
+    remConn = workspace.Zombies.ChildRemoved:Connect(function(z)
+        destroyESP(z)
+    end)
+end
+
+local function disableESP()
+    for z, gui in pairs(espEntries) do
+        gui:Destroy()
+    end
+    espEntries = {}
+    if addConn then addConn:Disconnect() end
+    if remConn then remConn:Disconnect() end
+    addConn, remConn = nil, nil
+end
+
+espToggle.onToggle = function(state)
+    if state then
+        enableESP()
+    else
+        disableESP()
+    end
+end
+
+local aimEnabled = false
+
+aimToggle.onToggle = function(state)
+    aimEnabled = state
+end
+
+local function getNearestZombie()
+    local character = LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return nil end
+    local rootPart = character.HumanoidRootPart
+    local nearest, minDist = nil, math.huge
+    for _, zombie in pairs(workspace.Zombies:GetChildren()) do
+        if isZombie(zombie) and zombie:FindFirstChild("Head") then
+            local dist = (zombie.Head.Position - rootPart.Position).Magnitude
+            if dist < minDist then
+                minDist = dist
+                nearest = zombie
+            end
+        end
+    end
+    return nearest
+end
+
+RunService.RenderStepped:Connect(function()
+    if not aimEnabled then return end
+    local character = LocalPlayer.Character
+    if not character then return end
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local zombie = getNearestZombie()
+    if zombie and zombie:FindFirstChild("Head") then
+        local targetPos = zombie.Head.Position
+        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+        local camLook = Vector3.new(
+            targetPos.X - hrp.Position.X,
+            0,
+            targetPos.Z - hrp.Position.Z
+        ).Unit
+        if camLook.Magnitude > 0 then
+            hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + camLook)
+        end
+    end
+end)
