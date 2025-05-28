@@ -73,8 +73,8 @@ local function createToggle(name, posY, colorOff, colorOn, iconOff, iconOn)
     return container
 end
 
-local espToggle = createToggle("ESPToggle", 20, Color3.fromRGB(50,50,50), Color3.fromRGB(150,200,255), "🌬", "🫡")
-local aimToggle = createToggle("AimToggle", 80, Color3.fromRGB(50,50,50), Color3.fromRGB(255,224,102), "🌬", "🫡")
+local espToggle = createToggle("ESPToggle", 20, Color3.fromRGB(50,50,50), Color3.fromRGB(150,200,255), "🔴", "🟢")
+local aimToggle = createToggle("AimToggle", 80, Color3.fromRGB(50,50,50), Color3.fromRGB(255,224,102), "🔴", "🟢")
 
 local espEntries = {}
 local addConn, remConn
